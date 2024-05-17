@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Prediction</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'AudioPredict/css/styles.css' %}">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const recordButton = document.getElementById('recordButton');
+            const predictionResult = document.getElementById('predictionResult');
+
+            let audioChunks = [];
+            let mediaRecorder;
+
+            recordButton.addEventListener('click', () => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                    recordButton.textContent = "Record";
+                } else {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(stream => {
+                            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+                            mediaRecorder.start();
+                            recordButton.textContent = "Stop";
+
+                            audioChunks = [];
+                            mediaRecorder.addEventListener("dataavailable", event => {
+                                audioChunks.push(event.data);
+                            });
+
+                            mediaRecorder.addEventListener("stop", () => {
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                                sendAudioToServer(audioBlob);
+                            });
+                        }).catch(error => console.error("Error accessing media devices.", error));
+                }
+            });
+
+            function sendAudioToServer(audioBlob) {
+                const formData = new FormData();
+                formData.append("audio", audioBlob, "recording.webm");
+
+                fetch('/predict/', {
+                    method: "POST",
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    predictionResult.textContent = `Prediction: ${data.prediction}`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    predictionResult.textContent = 'Error making prediction';
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Record your voice</h1>
+    <button id="recordButton">Record</button>
+    <div id="predictionResult">Prediction will appear here</div>
+</body>
+</html>
