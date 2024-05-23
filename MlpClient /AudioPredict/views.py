@@ -9,8 +9,10 @@ import os
 from io import BytesIO
 import subprocess
 from collections import Counter
+import speech_recognition as sr
 
-# Load your trained model and scaler
+r = sr.Recognizer()
+
 model = joblib.load('/Users/batu/Desktop/PROJECTS/MLP/Training/3Person.joblib')
 scaler = joblib.load('/Users/batu/Desktop/PROJECTS/MLP/Training/scaler.joblib')
 
@@ -36,6 +38,14 @@ def convert_audio(input_path, output_path):
     command = ['ffmpeg', '-i', input_path, '-ar', '16000', '-ac', '1', output_path]
     subprocess.run(command, check=True)
 
+def recognize_speech(filename):
+    with sr.AudioFile(filename) as source:
+        audio_data = r.record(source)
+        text = r.recognize_google(audio_data, language='tr-TR')
+        split_text = text.split()
+        counter = len(split_text)
+        return counter
+    
 @csrf_exempt
 def record_audio(request):
     if request.method == 'POST':
@@ -49,10 +59,10 @@ def record_audio(request):
 
             convert_audio(temp_input_path, temp_output_path)
 
+            words = recognize_speech(temp_output_path)
             y, sr = librosa.load(temp_output_path, res_type='kaiser_fast')
             os.remove(temp_input_path)
             os.remove(temp_output_path)
-
             # Split the audio into 5 equal parts
             part_length = len(y) // 5
             predictions = []
@@ -71,7 +81,7 @@ def record_audio(request):
             # Find the most frequent prediction
             most_common_prediction = Counter(predictions).most_common(1)[0][0]
 
-            return JsonResponse({'prediction': str(most_common_prediction)})
+            return JsonResponse({'prediction': str(most_common_prediction), 'counter' : words})
         except KeyError:
             return JsonResponse({'error': 'Invalid audio data'}, status=400)
         except Exception as e:

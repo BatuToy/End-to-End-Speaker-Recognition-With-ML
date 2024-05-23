@@ -36,7 +36,7 @@ def record_audio():
     sd.wait()
     sf.write('audio.wav', myrecording, fs)
     return 'audio.wav'
-# split thr audio file into 5 parts
+
 def split_audio(file_name):
     X, sample_rate = librosa.load(os.path.join(file_name), res_type='kaiser_fast')
     duration = len(X) / sample_rate
@@ -51,7 +51,7 @@ def predict_parts():
     predictions = []
     for i in range(5):
         feature = extract_feature(f'audio_{i}.wav', mfcc=True, chroma=True, mel=True)
-        feature = np.array(feature).reshape(1, -1)
+        feature = np.array(feature).reshape(1, -1)   
         feature = scaler.transform(feature)
         prediction = model.predict(feature)
         predictions.append(prediction[0])

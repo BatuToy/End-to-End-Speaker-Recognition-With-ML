@@ -79,6 +79,7 @@ You can use the `test_audio.py` script to test the trained model with new audio 
 
 Once the Django server is running, you can interact with the frontend to record your voice and get predictions.
 
+![Web Interface](./webSS_2.jpeg)
 ![Web Interface](./webSS.jpeg)
 
 ## Features

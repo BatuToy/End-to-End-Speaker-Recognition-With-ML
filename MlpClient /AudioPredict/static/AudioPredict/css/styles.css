@@ -1,51 +1,81 @@
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f0f0f5;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(to right, #5a2d82, #2583b8);
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
+    color: #FFFFFF;
+}
+
+header {
+    text-align: center;
+    padding: 1em 0;
+    background-color: rgba(58, 12, 163, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    color: #333;
-    font-size: 2em;
-    margin-bottom: 20px;
+    font-size: 2.5em;
+    color: #FFFFFF;
+    margin: 0;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
-button {
-    background-color: #4CAF50;
+main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.content {
+    background-color: rgba(44, 23, 97, 0.9);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    width: 80%;
+    max-width: 500px;
+}
+
+#recordButton {
+    background-color: #6241c7;
     color: white;
     border: none;
-    padding: 15px 32px;
+    padding: 10px 20px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
+    font-size: 1em;
+    margin: 20px 0;
     cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
+    border-radius: 50px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #4b34a0;
+    transform: translateY(-2px);
 }
 
 #predictionResult {
     margin-top: 20px;
     padding: 20px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    width: 80%;
-    max-width: 600px;
-    text-align: center;
-    font-size: 1.2em;
-    color: #333;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #FFFFFF;
+    background-color: #34245c;
+    color: #FFFFFF;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
+footer {
+    text-align: center;
+    padding: 1em 0;
+    background-color: rgba(58, 12, 163, 0.5);
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}

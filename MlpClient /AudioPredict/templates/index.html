@@ -4,37 +4,71 @@
     <meta charset="UTF-8">
     <title>Audio Prediction</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'AudioPredict/css/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @keyframes wave {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .wave {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            width: 100px;
+            height: 100px;
+            animation: wave 1.5s infinite;
+        }
+        .wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        .wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+        .hidden {
+            display: none;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const recordButton = document.getElementById('recordButton');
+            const startButton = document.getElementById('startButton');
             const predictionResult = document.getElementById('predictionResult');
+            const waves = document.getElementById('waves');
+            const mainContent = document.getElementById('mainContent');
 
             let audioChunks = [];
             let mediaRecorder;
 
-            recordButton.addEventListener('click', () => {
+            startButton.addEventListener('click', () => {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+                        mediaRecorder.start();
+                        startButton.classList.add('hidden');
+                        waves.classList.remove('hidden');
+
+                        audioChunks = [];
+                        mediaRecorder.addEventListener("dataavailable", event => {
+                            audioChunks.push(event.data);
+                        });
+
+                        mediaRecorder.addEventListener("stop", () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            sendAudioToServer(audioBlob);
+                        });
+                    }).catch(error => console.error("Error accessing media devices.", error));
+            });
+
+            waves.addEventListener('click', () => {
                 if (mediaRecorder && mediaRecorder.state === "recording") {
                     mediaRecorder.stop();
-                    recordButton.textContent = "Record";
-                } else {
-                    navigator.mediaDevices.getUserMedia({ audio: true })
-                        .then(stream => {
-                            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-                            mediaRecorder.start();
-                            recordButton.textContent = "Stop";
-
-                            audioChunks = [];
-                            mediaRecorder.addEventListener("dataavailable", event => {
-                                audioChunks.push(event.data);
-                            });
-
-                            mediaRecorder.addEventListener("stop", () => {
-                                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                                sendAudioToServer(audioBlob);
-                            });
-                        }).catch(error => console.error("Error accessing media devices.", error));
+                    waves.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
                 }
             });
 
@@ -48,7 +82,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    predictionResult.textContent = `Prediction: ${data.prediction}`;
+                    predictionResult.textContent = `${data.prediction} \n Counter:${data.counter}`;
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -58,9 +92,23 @@
         });
     </script>
 </head>
-<body>
-    <h1>Record your voice</h1>
-    <button id="recordButton">Record</button>
-    <div id="predictionResult">Prediction will appear here</div>
+<body class="flex flex-col min-h-screen bg-gradient-to-r from-purple-800 to-blue-500 text-white">
+    <header class="text-center py-4 bg-purple-700 bg-opacity-50 shadow-md">
+        <h1 class="text-4xl font-bold">Audio Prediction</h1>
+    </header>
+    <main class="flex-grow flex items-center justify-center p-4 relative">
+        <div id="waves" class="hidden absolute inset-0 flex-center">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+        <div id="mainContent" class="hidden bg-purple-900 bg-opacity-80 p-8 rounded-2xl shadow-xl w-full max-w-lg text-center relative">
+            <div id="predictionResult" class="mt-4 p-4 border border-white bg-purple-700 rounded-2xl shadow-md text-xl text-white">Prediction will appear here</div>
+        </div>
+        <button id="startButton" class="relative z-10 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-full shadow-md transition-transform transform hover:scale-105">Start</button>
+    </main>
+    <footer class="text-center py-4 bg-purple-700 bg-opacity-50 shadow-md">
+        <p>&copy; 2024 Audio Prediction. All rights reserved.</p>
+    </footer>
 </body>
 </html>
