@@ -36,37 +36,45 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const startButton = document.getElementById('startButton');
-            const predictionResult = document.getElementById('predictionResult');
             const waves = document.getElementById('waves');
+            const predictionList = document.getElementById('predictionList');
             const mainContent = document.getElementById('mainContent');
-
-            let audioChunks = [];
             let mediaRecorder;
+            let audioChunks = [];
+            let recordingInterval;
 
             startButton.addEventListener('click', () => {
                 navigator.mediaDevices.getUserMedia({ audio: true })
                     .then(stream => {
                         mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
                         mediaRecorder.start();
                         startButton.classList.add('hidden');
                         waves.classList.remove('hidden');
 
-                        audioChunks = [];
-                        mediaRecorder.addEventListener("dataavailable", event => {
+                        mediaRecorder.addEventListener('dataavailable', event => {
                             audioChunks.push(event.data);
                         });
 
-                        mediaRecorder.addEventListener("stop", () => {
+                        recordingInterval = setInterval(() => {
+                            if (mediaRecorder.state === "recording") {
+                                mediaRecorder.stop();
+                            }
+                        }, 3000);
+
+                        mediaRecorder.addEventListener('stop', () => {
                             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                             sendAudioToServer(audioBlob);
+                            audioChunks = [];
+                            mediaRecorder.start();
                         });
                     }).catch(error => console.error("Error accessing media devices.", error));
             });
 
             waves.addEventListener('click', () => {
                 if (mediaRecorder && mediaRecorder.state === "recording") {
+                    clearInterval(recordingInterval);
                     mediaRecorder.stop();
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
                     waves.classList.add('hidden');
                     mainContent.classList.remove('hidden');
                 }
@@ -82,11 +90,15 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    predictionResult.textContent = `${data.prediction} \n Counter:${data.counter}`;
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Prediction: ${data.prediction} | Counter: ${data.counter}`;
+                    predictionList.appendChild(listItem);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    predictionResult.textContent = 'Error making prediction';
+                    const listItem = document.createElement('li');
+                    listItem.textContent = 'Error making prediction';
+                    predictionList.appendChild(listItem);
                 });
             }
         });
@@ -103,7 +115,7 @@
             <div class="wave"></div>
         </div>
         <div id="mainContent" class="hidden bg-purple-900 bg-opacity-80 p-8 rounded-2xl shadow-xl w-full max-w-lg text-center relative">
-            <div id="predictionResult" class="mt-4 p-4 border border-white bg-purple-700 rounded-2xl shadow-md text-xl text-white">Prediction will appear here</div>
+            <ul id="predictionList" class="mt-4 p-4 bg-purple-700 rounded-2xl shadow-md text-xl text-white"></ul>
         </div>
         <button id="startButton" class="relative z-10 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-full shadow-md transition-transform transform hover:scale-105">Start</button>
     </main>

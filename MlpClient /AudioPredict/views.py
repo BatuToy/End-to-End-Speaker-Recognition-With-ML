@@ -39,7 +39,7 @@ def convert_audio(input_path, output_path):
     subprocess.run(command, check=True)
 
 def recognize_speech(filename):
-    with sr.AudioFile(filename) as source:
+    with sr.WavFile(filename) as source:
         audio_data = r.record(source)
         text = r.recognize_google(audio_data, language='tr-TR')
         split_text = text.split()
@@ -64,12 +64,12 @@ def record_audio(request):
             os.remove(temp_input_path)
             os.remove(temp_output_path)
             # Split the audio into 5 equal parts
-            part_length = len(y) // 5
+            part_length = len(y) // 2
             predictions = []
 
-            for i in range(5):
+            for i in range(2):
                 start = i * part_length
-                end = (i + 1) * part_length if i < 4 else len(y)
+                end = (i + 1) * part_length if i < 1 else len(y)
                 y_part = y[start:end]
 
                 feature = extract_feature(y_part, sr, mfcc=True, chroma=True, mel=True)
@@ -81,7 +81,7 @@ def record_audio(request):
             # Find the most frequent prediction
             most_common_prediction = Counter(predictions).most_common(1)[0][0]
 
-            return JsonResponse({'prediction': str(most_common_prediction), 'counter' : words})
+            return JsonResponse({'prediction': str(most_common_prediction), 'counter': words})
         except KeyError:
             return JsonResponse({'error': 'Invalid audio data'}, status=400)
         except Exception as e:
